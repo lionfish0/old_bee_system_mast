@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style> /* set the CSS */
+#noflash_image {
+    position:absolute;
+    left:350px;
+    top:90px;
+    width:300px;
+    height:225px;
+    background-image:url("nodata.png");
+}
+#config {
+    position:absolute;
+    left:30px;
+    top:90px;
+    width:300px;
+    height:300px;
+}
+#flash_image {
+    position:absolute;
+    left:680px;
+    top:90px;
+    width:300px;
+    height:225px;
+    background-image:url("nodata.png");
+}
+#noflash_title {
+    position:absolute;
+    left:350px;
+    top:60px;
+}
+#flash_title {
+    position:absolute;
+    left:680px;
+    top:60px; 
+}
+
+
+#noflash_image_centre {
+    position:absolute;
+    left:350px;
+    top:350px;
+    width:200px;
+    height:200px;
+    background-image:url("nodata.png");
+}
+#flash_image_centre {
+    position:absolute;
+    left:680px;
+    top:350px;
+    width:200px;
+    height:200px;
+    background-image:url("nodata.png");
+}
+#noflash_title_centre {
+    position:absolute;
+    left:350px;
+    top:330px;
+}
+#flash_title_centre {
+    position:absolute;
+    left:680px;
+    top:330px; 
+}
+#trackingresults {
+    position:absolute;
+    left:350px;
+    top:550px; 
+}
+</style>
+<head>
+ <script src="jquery-3.3.1.min.js"></script>
+ 
+</head>
+<body>
+
+
+<h3>Bumblebee Tracking System</h3>
+<div id="config">
+<input id="url" value="10.3.141.1:5000" />
+<button id="startup">Startup</button>
+<br/>
+Capture:
+<button id="start">Start</button>
+<button id="stop">Stop</button><br/>
+Interval <input id="interval" value=3 size=2/> seconds
+<button id="setinterval">set</button><br/><br />
+
+<button id="download" class="refreshimages">Download</button>
+<button id="imagedown" class="refreshimages">&lt;</button>
+<button id="imageup" class="refreshimages">&gt;</button>
+<br />
+<input type="checkbox" id="latestimage">Update to latest image</input>
+<br />
+<br />Image <span id="index">0</span> of <span id="trackingimagecount">?</span><br />
+Image threshold: <input id="maxval" size=3 value=10 />
+
+Exposure: <input id="exposure" value="100" size="5" />&mu;s<br />
+Gain: <input id="gain" value="0" size="5" />dB<br />
+Blocksize: <input id="blocksize" value="20" size="5" />pixels<br />
+Stepsize: <input id="stepsize" value="10" size="5" />pixels<br />
+Offset: <input id="offset" value="3" size="5" />pixels<br />
+SkipCalc: <input id="skipcalc" value="0" size="2" /><br />
+<button id="set">Set</button>
+
+<br/>
+Status: <span id="status">Offline</span>
+<br />
+<span>Download: <a id="download" href="#">pickle file</a>.</span>
+</div>
+<span id="noflash_title">No Flash</span>
+<div id="noflash_image">
+</div>
+<span id="flash_title">Flash</span>
+<div id="flash_image">
+</div>
+<span id="noflash_title_centre">No Flash (centre)</span>
+<div id="noflash_image_centre">
+</div>
+<span id="flash_title_centre">Flash (centre)</span>
+<div id="flash_image_centre">
+</div>
+<span id="trackingresults">[no tracking results]</span>
+
+<script>
+image = 0
+trackingimagecount = 0
+$('button#startup').click(function(){
+    $('span#status').text('Starting up...');
+    url = "http://"+$('input#url').val()+"/startup/"+$('input#exposure').val()+"/"+$('input#gain').val();
+    $.ajax({
+      url: url,
+      success: function(data, status, jqXHR){
+        $('span#status').text('Possible Startup Error');
+        if (data=="Already Running") {$('span#status').text('Online');}
+        if (data=="Startup complete") {$('span#status').text('Online');}
+      },
+      error: function(jqXHR, status, errorThrown){$('span#status').text('Startup Error');},
+    });
+    $('a#download').attr('href',"http://"+$('input#url').val()+"/getpickleddataset.p");
+});
+$('button#start').click(function(){
+    $('span#status').text('Starting...');
+    url = "http://"+$('input#url').val()+"/start";
+    $.ajax({
+      url: url,
+      success: function(data, status, jqXHR){
+        $('span#status').text('Possible Start Error');
+        if (data=="Blinking Started") {$('span#status').text('Running');}
+      },
+      error: function(jqXHR, status, errorThrown){$('span#status').text('Start Error');},
+    });
+});
+$('button#stop').click(function(){
+    $('span#status').text('Stop...');
+    url = "http://"+$('input#url').val()+"/stop";
+    $.ajax({
+      url: url,
+      success: function(data, status, jqXHR){
+        $('span#status').text('Possible Stop Error');
+        if (data=="Blinking Stopped") {$('span#status').text('Online');}
+      },
+      error: function(jqXHR, status, errorThrown){$('span#status').text('Stop Error');},
+    });
+});
+$('button#imageup').click(function(){image=image+1;})
+$('button#imagedown').click(function(){image=image-1;})
+
+setInterval(function(){ 
+    url = "http://"+$('input#url').val()+"/gettrackingimagecount";
+    $.ajax({
+      url: url,
+      success: function(data, status, jqXHR){
+        newtic = data
+        if (newtic!=trackingimagecount)
+        {
+            trackingimagecount = newtic
+            $('span#status').text("new image");
+            if($("#latestimage").is(':checked')) {
+                image = trackingimagecount-1
+                $('#download').click();
+            }
+        }
+        else
+        {
+            $('span#status').text("");        
+        }
+      },
+      error: function(jqXHR, status, errorThrown){$('span#status').text('Error getting tracking image count.');}
+    });
+    //code goes here that will be run every 5 seconds.    
+}, 1000);
+
+$('button.refreshimages').click(function(){
+    $('span#index').text(image+1);//have to add one as python is zero indexed
+    $('span#trackingimagecount').text(trackingimagecount);
+    $('span#status').text('Downloading...');
+    url = "http://"+$('input#url').val()+"/gettrackingimage/"+image+"/0/"+$('input#maxval').val()+"/1";
+    $('#flash_image').css("background-image","url('"+url+"')");
+    url = "http://"+$('input#url').val()+"/gettrackingimage/"+image+"/1/"+$('input#maxval').val()+"/1";
+    $('#noflash_image').css("background-image","url('"+url+"')");
+    
+    url = "http://"+$('input#url').val()+"/gettrackingimage/"+image+"/0/"+$('input#maxval').val()+"/0";
+    $('#flash_image_centre').css("background-image","url('"+url+"')");
+    url = "http://"+$('input#url').val()+"/gettrackingimage/"+image+"/1/"+$('input#maxval').val()+"/0";
+    $('#noflash_image_centre').css("background-image","url('"+url+"')");
+    
+    url = "http://"+$('input#url').val()+"/imagestats/"+image
+    $.ajax({
+      url: url,
+      success: function(data, status, jqXHR){
+        $('span#trackingresults').text(data);
+      },
+      error: function(jqXHR, status, errorThrown){$('span#status').text('Download tracking results Error');}
+    });
+    
+   /* $.ajax({
+      url: url,/imagestats
+      success: function(data, status, jqXHR){
+        $('span#status').text('Downloaded');
+        if (data=="No new image") {$('span#status').text('No Image');}
+        //else {$('#flash_image').css("background-image","data:image/png,"+data);}
+        
+      },
+      error: function(jqXHR, status, errorThrown){$('span#status').text('Download Error');}
+    });*/
+});
+$('button#setinterval').click(function(){
+    $('span#status').text('Setting...');
+    url = "http://"+$('input#url').val()+"/setinterval/"+$('input#interval').val();
+    $.ajax({
+      url: url,
+      success: function(data, status, jqXHR){
+        $('span#status').text('Set');
+      },
+      error: function(jqXHR, status, errorThrown){$('span#status').text('Set Error');}
+    });
+});
+$('button#set').click(function(){
+    $('span#status').text('Setting...');
+    url = "http://"+$('input#url').val()+"/setcamera/"+$('input#exposure').val()+"/"+$('input#gain').val()+"/"+$('input#blocksize').val()+"/"+$('input#offset').val()+"/"+$('input#stepsize').val()+"/"+$('input#skipcalc').val();
+    $.ajax({
+      url: url,
+      success: function(data, status, jqXHR){
+        $('span#status').text('Set');
+      },
+      error: function(jqXHR, status, errorThrown){$('span#status').text('Set Error');}
+    });
+});
+</script>
+</body>
+
