@@ -1,4 +1,4 @@
-from flask import Flask, make_response, jsonify
+from flask import Flask, make_response
 from bee_system_mast.blink_control import Blink_Control
 from bee_system_mast.camera_control_arducam import Camera_Control
 from bee_system_mast.tracking_control import Tracking_Control
@@ -13,7 +13,6 @@ import base64
 import sys
 import os
 from mem_top import mem_top
-from datetime import datetime as dt
 
 app = Flask(__name__)
 CORS(app)
@@ -26,14 +25,8 @@ import logging
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 
-@app.route('/startup/<int:exposure>/<int:gain>/<string:timestring>')
-def startup(exposure,gain,timestring):
-    d = dt.strptime(timestring,"%Y-%m-%dT%H:%M:%S")
-    #NOTE: This requires:
-    #        sudo visudo
-    # then add:
-    #        pi ALL=(ALL) NOPASSWD: /bin/date
-    os.system('sudo /bin/date -s %s' % d.strftime("%Y-%m-%dT%H:%M:%S"))
+@app.route('/startup/<int:exposure>/<int:gain>')
+def startup(exposure,gain):
     global startupdone
     if startupdone:
         return "Already Running"
@@ -199,21 +192,6 @@ def gettrackingimage(index,img,cmax,lowres):
 
     response.mimetype = 'image/png'
     return response
-
-@app.route('/getrawtrackingimage/<int:index>/<int:img>/<int:lowres>')
-def getrawtrackingimage(index,img,lowres):
-    if img<0 or img>1:
-        return "image must be 0 or 1"
-    if (index>=len(tracking_control.tracking_results)) or (index<0):
-        return "out of range"
-    
-    if lowres:    
-        pair = tracking_control.tracking_results[index]['lowresimages']
-    else:
-        pair = tracking_control.tracking_results[index]['highresimages']
-    
-    return jsonify({'image':pair[img].astype(int).tolist()}) #TODO: add locations from below to JSON object
-    
 
 import pickle
 @app.route('/getpickleddataset.p')

@@ -25,6 +25,9 @@ class PhotoResult():
         self.time = time.time()
         print("Time: ")
         print(self.time)
+    def as_list(self):
+        return [self.flash,self.direction,self.time,self.img]
+        
         
 
 class Camera_Control():
