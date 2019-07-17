@@ -32,12 +32,18 @@ class PhotoResult():
 
 class Camera_Control():
     def set_exposure(self,exposure):
-        assert False, "NOT IMPLEMENTED"
         #self.camera.set_exposure_time(exposure)#us
+        setval = round(exposure/22.22)
+        print(setval)
+        ArducamSDK.Py_ArduCam_writeSensorReg(self.handle,0x3012,setval)
+        print(ArducamSDK.Py_ArduCam_readSensorReg(self.handle,0x3012))
 
     def set_gain(self,gain):
-        assert False, "NOT IMPLEMENTED"    
+        #assert False, "NOT IMPLEMENTED"    
         #self.camera.set_gain(gain)
+        #0x20 = 32 = no gain, 
+        ArducamSDK.Py_ArduCam_writeSensorReg(self.handle,0x305e,round(32*gain))
+        
 
     def configBoard(self,handle,fileNodes):
         for i in range(0,len(fileNodes)):

@@ -232,10 +232,13 @@ function convertJSONtoImageURL(data) {
     // manipulate some pixel elements
     row = 0;
     col = 0;
+    scale = 255/$('input#maxval').val()
     for(var i=0;i<imdata.length;i+=4){
-        imdata[i]=img[row][col];
-        imdata[i+1] = img[row][col];
-        imdata[i+2] = img[row][col];
+        c = img[row][col]*scale;
+        if (c>255) {c=255;}
+        imdata[i]=c;
+        imdata[i+1] = c;
+        imdata[i+2] = c;
         imdata[i+3]=255; // make this pixel opaque
         col = col + 1;
         if (col>=width) {
@@ -250,10 +253,10 @@ function convertJSONtoImageURL(data) {
 }
 
 
-$('button.refreshimages').click(function(){
-    
-    
-    
+$('button.refreshimages').click(function(){refreshimages();});
+
+$('input#maxval').bind('input',function() {refreshimages();});
+function refreshimages(){
     $('span#index').text(image+1);//have to add one as python is zero indexed
     $('span#trackingimagecount').text(trackingimagecount);
     $('span#status').text('Downloading...');
@@ -287,7 +290,7 @@ $('button.refreshimages').click(function(){
       },
       error: function(jqXHR, status, errorThrown){$('span#status').text('Download Error');}
     });*/
-});
+}
 $('button#setinterval').click(function(){
     $('span#status').text('Setting...');
     url = "http://"+$('input#url').val()+"/setinterval/"+$('input#interval').val();

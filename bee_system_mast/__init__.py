@@ -15,6 +15,9 @@ import os
 from mem_top import mem_top
 from datetime import datetime as dt
 
+"""Column CorrectionThe AR0134 uses a column parallel readout architecture to achieve fast frame rates. Without any corrections, the consequence of this architecture is that different column signal paths have slightly different offsets that might show up on the final image as structured fixed pattern noise.The AR0134 has column correction circuitry that measures this offset and removes it from the image before output. This is done by sampling dark rows containing tied pixels and measuring an offset coefficient per column to be corrected later in the signal path.Column correction can be enabled/disabled via R0x30D4[15]. Additionally, the number of rows used for this offset coefficient measurement is set in R0x30D4[3:0]. By default this register is set to 0x7, which means that 8 rows are used. This is the recommended value. Other control features regarding column correction can be viewed in the AR0134 Register reference. Any changes to column correction settings need to be done when the sensor streaming is disabled and the appropriate triggering sequence must be followed as described below -  https://cdn.hackaday.io/files/21966939793344/AR0134_DG_C.PDF
+"""
+
 app = Flask(__name__)
 CORS(app)
 
