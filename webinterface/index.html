@@ -215,6 +215,7 @@ setInterval(function(){
 
 function convertJSONtoImageURL(data) {
     img = data['image']
+    tracking = data['tracking']
     height = img.length
     width = img[0].length
 
@@ -233,19 +234,28 @@ function convertJSONtoImageURL(data) {
     row = 0;
     col = 0;
     scale = 255/$('input#maxval').val()
+    x=tracking[0][0]/10
+    y=tracking[0][1]/10
+
     for(var i=0;i<imdata.length;i+=4){
         c = img[row][col]*scale;
         if (c>255) {c=255;}
-        imdata[i]=c;
-        imdata[i+1] = c;
-        imdata[i+2] = c;
+        cr = c;
+        cg = c;
+        cb = c;
+        if ((col>y-5) && (col<y+5) && (row>x-5) && (row<x+5)) {cr=255; cg=255; cb=0;}
+        imdata[i]=cr;
+        imdata[i+1] = cg;
+        imdata[i+2] = cb;
         imdata[i+3]=255; // make this pixel opaque
+        
         col = col + 1;
         if (col>=width) {
           col = 0;
           row = row + 1;
         }
     }
+    
 
     // put the modified pixels back on the canvas
     ctx.putImageData(imgData,0,0);

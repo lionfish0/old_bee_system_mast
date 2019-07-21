@@ -214,8 +214,11 @@ def getrawtrackingimage(index,img,lowres):
         pair = tracking_control.tracking_results[index]['lowresimages']
     else:
         pair = tracking_control.tracking_results[index]['highresimages']
-    
-    return jsonify({'image':pair[img].astype(int).tolist()}) #TODO: add locations from below to JSON object
+    trackingresults = []
+    for i,loc in enumerate(tracking_control.tracking_results[index]['maxvals']):
+        trackingresults.append([int(loc['location'][0]),int(loc['location'][1]),int(loc['score'])])
+    print(trackingresults)
+    return jsonify({'image':pair[img].astype(int).tolist(), 'tracking':trackingresults}) #TODO: add locations from below to JSON object
     
 
 import pickle
