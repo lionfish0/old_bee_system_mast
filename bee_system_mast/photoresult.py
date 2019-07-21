@@ -1,5 +1,5 @@
 import time
-
+import numpy as np
 class PhotoResult():
     def __init__(self,img,direction,flash):
         print("Creating Photo Result Object")
@@ -7,7 +7,7 @@ class PhotoResult():
         print(flash)
         print("Direction: ")
         print(direction)
-        self.img = img
+        self.img = img.astype(np.double)
         self.flash = flash
         self.direction = direction
         self.time = time.time()
