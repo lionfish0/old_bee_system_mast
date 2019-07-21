@@ -83,7 +83,8 @@ class Tracking_Control():
         msg = ""
         msg += "Processing Images\n"
         msg += "time: %0.4f\n" % (time.time()-starttime)
-        np.save("%0.6f" % pair[0].time,pair[0].img,allow_pickle=False)
+        filename = "/home/pi/"+time.strftime("%Y%m%d_%H%M%S",time.gmtime(pair[0].time))+("%0.4f" % (pair[0].time%1))[1:]
+        np.save(filename,pair[0].img,allow_pickle=False)
         msg += "time: %0.4f\n" % (time.time()-starttime)
         msg += "Computing Shift\n"
         

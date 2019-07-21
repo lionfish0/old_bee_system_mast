@@ -1,4 +1,4 @@
-from flask import Flask, make_response
+from flask import Flask, make_response, jsonify
 from bee_system_mast.blink_control import Blink_Control
 from bee_system_mast.camera_control_arducam import Camera_Control
 from bee_system_mast.tracking_control import Tracking_Control
@@ -13,6 +13,10 @@ import base64
 import sys
 import os
 from mem_top import mem_top
+from datetime import datetime as dt
+
+"""Column CorrectionThe AR0134 uses a column parallel readout architecture to achieve fast frame rates. Without any corrections, the consequence of this architecture is that different column signal paths have slightly different offsets that might show up on the final image as structured fixed pattern noise.The AR0134 has column correction circuitry that measures this offset and removes it from the image before output. This is done by sampling dark rows containing tied pixels and measuring an offset coefficient per column to be corrected later in the signal path.Column correction can be enabled/disabled via R0x30D4[15]. Additionally, the number of rows used for this offset coefficient measurement is set in R0x30D4[3:0]. By default this register is set to 0x7, which means that 8 rows are used. This is the recommended value. Other control features regarding column correction can be viewed in the AR0134 Register reference. Any changes to column correction settings need to be done when the sensor streaming is disabled and the appropriate triggering sequence must be followed as described below -  https://cdn.hackaday.io/files/21966939793344/AR0134_DG_C.PDF
+"""
 
 app = Flask(__name__)
 CORS(app)
@@ -25,8 +29,14 @@ import logging
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 
-@app.route('/startup/<int:exposure>/<int:gain>')
-def startup(exposure,gain):
+@app.route('/startup/<int:exposure>/<int:gain>/<string:timestring>')
+def startup(exposure,gain,timestring):
+    d = dt.strptime(timestring,"%Y-%m-%dT%H:%M:%S")
+    #NOTE: This requires:
+    #        sudo visudo
+    # then add:
+    #        pi ALL=(ALL) NOPASSWD: /bin/date
+    os.system('sudo /bin/date -s %s' % d.strftime("%Y-%m-%dT%H:%M:%S"))
     global startupdone
     if startupdone:
         return "Already Running"
@@ -192,6 +202,24 @@ def gettrackingimage(index,img,cmax,lowres):
 
     response.mimetype = 'image/png'
     return response
+
+@app.route('/getrawtrackingimage/<int:index>/<int:img>/<int:lowres>')
+def getrawtrackingimage(index,img,lowres):
+    if img<0 or img>1:
+        return "image must be 0 or 1"
+    if (index>=len(tracking_control.tracking_results)) or (index<0):
+        return "out of range"
+    
+    if lowres:    
+        pair = tracking_control.tracking_results[index]['lowresimages']
+    else:
+        pair = tracking_control.tracking_results[index]['highresimages']
+    trackingresults = []
+    for i,loc in enumerate(tracking_control.tracking_results[index]['maxvals']):
+        trackingresults.append([int(loc['location'][0]),int(loc['location'][1]),int(loc['score'])])
+    print(trackingresults)
+    return jsonify({'image':pair[img].astype(int).tolist(), 'tracking':trackingresults}) #TODO: add locations from below to JSON object
+    
 
 import pickle
 @app.route('/getpickleddataset.p')
