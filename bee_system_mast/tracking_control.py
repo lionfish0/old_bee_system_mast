@@ -77,14 +77,14 @@ class Tracking_Control():
             msg+= "Value: %d, Location: %d, %d\n" % (int(mv['val']), int(mv['location'][0]),int(mv['location'][1]))
         return msg
 
-    def analyse_image_pair(self,pair):
+    def analyse_image_pair(self,pair,save=True):
         searchbox = 100
         starttime = time.time()
         msg = ""
         msg += "Processing Images\n"
         msg += "time: %0.4f\n" % (time.time()-starttime)
         filename = "/home/pi/"+time.strftime("%Y%m%d_%H%M%S",time.gmtime(pair[0].time))+("%0.4f" % (pair[0].time%1))[1:]
-        np.save(filename,pair[0].img,allow_pickle=False)
+        if save: np.save(filename,pair[0].img,allow_pickle=False)
         msg += "time: %0.4f\n" % (time.time()-starttime)
         msg += "Computing Shift\n"
         
